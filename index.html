@@ -36,7 +36,8 @@
   
   <div id="NHS_SECTION">
     <label for="NHS_NUM">NHS Number Generator:</label>
-    <input type="text" id="NHS_NUM" name="NHS_NUM" readonly="true" />
+    <input type="text" id="NHS_NUM" name="NHS_NUM" readonly="true" size="10" />
+    <button type="button" onclick="updateNhsNumber()">Generate</button>
   </div>
     
   <script type="text/javascript">
@@ -91,10 +92,12 @@
       return prefix + "" + checkDigit;
     }
     
+    function updateNhsNumber() {
+      document.getElementById("NHS_NUM").value = generateNhsNumber();
+    }
+    
     function init() {
-      setTimeout(function() {
-        document.getElementById("NHS_NUM").value = generateNhsNumber();
-      }, 250);
+      setTimeout(updateNhsNumber, 250);
     }
     
   </script>
