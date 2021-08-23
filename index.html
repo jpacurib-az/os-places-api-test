@@ -1,0 +1,102 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>NHS/HIE/GNCR Tool</title>
+  <style type="text/css">
+  
+    body {
+      width: 90%;
+    }
+    textarea#SOAP_INPUT {
+      width: 100%;
+    }
+    div#BTN_CONTAINER {
+      padding: 10px;
+    }
+    div#NHS_SECTION {
+      padding-top: 20px;
+    }
+  </style>
+</head>
+
+<body onload="init()">
+
+  <div>
+    <label for="SOAP_INPUT">SOAP Envelope Response XML:</label>
+    <br />
+    <textarea id="SOAP_INPUT" name="SOAP_INPUT" rows="20"></textarea>
+  </div>
+  
+  <div id="BTN_CONTAINER">
+    <button type="button" onclick="clearInput()">Clear</button>    
+    <button type="button" onclick="convertInput()">Convert</button>
+  <div>
+  
+  <div id="NHS_SECTION">
+    <label for="NHS_NUM">NHS Number Generator:</label>
+    <input type="text" id="NHS_NUM" name="NHS_NUM" readonly="true" />
+  </div>
+    
+  <script type="text/javascript">
+    function clearInput() {
+      document.getElementById("SOAP_INPUT").value = "";
+      document.getElementById("SOAP_INPUT").focus();
+    }
+    
+    function unescapeHtml(text) {
+      var secretDiv = document.createElement("div");
+      secretDiv.innerHTML = text;
+      return secretDiv.textContent;
+    }
+        
+    function openWindow(html) {
+      var win = window.open();
+      win.document.write(html);
+      win.document.close();
+    }
+    
+    function convertInput() {      
+      var soapInput = document.getElementById("SOAP_INPUT").value;      
+      
+      var findStart = "<ser:azeusCareDetails><![CDATA[";
+      var findEnd = "]]></ser:azeusCareDetails>";
+      
+      var start = soapInput.indexOf(findStart);
+      var end = soapInput.indexOf(findEnd);
+      
+      if (start < 0 || end < 0) {
+        alert("Cannot parse SOAP Envelop Response XML");
+        return;
+      }
+      
+      var output = soapInput.substring(start + findStart.length, end);
+      var html = unescapeHtml(output);
+      openWindow(html);
+    }  
+
+    function generateNhsNumber() {
+      var prefix = "";
+      var checkDigit = 0;
+      do {
+        var sum = 0;
+        prefix = (Math.floor(Math.random() * (999999999 - 100000000 + 1)) + 100000000) + "";
+        for (var i = 0; i < 9; i++) {
+          sum += prefix.charAt(i) * (10 - i);
+        }
+        checkDigit = sum % 11;  
+        checkDigit = 11 - checkDigit;
+      } while(checkDigit < 1 || checkDigit > 9);  
+      return prefix + "" + checkDigit;
+    }
+    
+    function init() {
+      setTimeout(function() {
+        document.getElementById("NHS_NUM").value = generateNhsNumber();
+      }, 250);
+    }
+    
+  </script>
+</body>
+</html>
