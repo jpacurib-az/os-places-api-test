@@ -1,1 +1,0 @@
-# nhs-hie-gncr-tool
