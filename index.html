@@ -1,105 +1,285 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>NHS/HIE/GNCR Tool</title>
+  <title>OS Places API Test</title>
   <style type="text/css">
-  
     body {
       width: 90%;
+      font-family: system-ui, sans-serif;
     }
-    textarea#SOAP_INPUT {
+    
+    .hidden {
+      display: none;
+    }
+    
+    h1 {
+      font-size: 1.3em;
+    }
+    
+    div.container {
+      display: flex;
       width: 100%;
     }
-    div#BTN_CONTAINER {
-      padding: 10px;
+    
+    div.container div.left-pane {
+      flex: 46%;
     }
-    div#NHS_SECTION {
-      padding-top: 20px;
+    
+    div.container div.right-pane {
+      flex: 54%;
     }
+    
+    div.subheader {
+      font-weight: bold;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+    
+    div.row {
+      padding-bottom: 6px;
+    }
+    
+    label {
+      margin-right: 8px;
+    }
+
+    input[type=text] {
+      width: 500px;
+    }
+    
+    div#COMMON_PARAMS input[type=text] {
+      width: 250px;
+    }
+    
+    select, input[type=number] {
+      width: 80px;
+      margin-right: 16px;
+    }
+    
+    span.note {
+      display: block;
+      margin-top: 24px;
+      font-size: small;
+    }
+    
+    span.note ul {
+      margin-top: 4px;
+    }
+    
+    textarea#QUERY_FULL_URL {
+      width: 99.6%;
+    }
+    
+    iframe {
+      width: 100%;
+      height: 85vh;
+      border: 1px solid lightgray;
+    }
+
   </style>
 </head>
 
 <body onload="init()">
-
-  <div>
-    <label for="SOAP_INPUT">SOAP Envelope Response XML:</label>
-    <br />
-    <textarea id="SOAP_INPUT" name="SOAP_INPUT" rows="20"></textarea>
-  </div>
+  <div class="container">
   
-  <div id="BTN_CONTAINER">
-    <button type="button" onclick="clearInput()">Clear</button>    
-    <button type="button" onclick="convertInput()">Convert</button>
-  <div>
-  
-  <div id="NHS_SECTION">
-    <label for="NHS_NUM">NHS Number Generator:</label>
-    <input type="text" id="NHS_NUM" name="NHS_NUM" readonly="true" size="10" />
-    <button type="button" onclick="updateNhsNumber()">Generate</button>
-  </div>
-    
-  <script type="text/javascript">
-    function clearInput() {
-      document.getElementById("SOAP_INPUT").value = "";
-      document.getElementById("SOAP_INPUT").focus();
-    }
-    
-    function unescapeHtml(text) {
-      var secretDiv = document.createElement("div");
-      secretDiv.innerHTML = text;
-      return secretDiv.textContent;
-    }
+    <div class="left-pane">
+      <h1>OS Places API Test</h1>
+      
+      <div class="row">
+        <label for="SEARCH_QUERY">Search:</label>
+        <input type="text" id="SEARCH_QUERY" name="SEARCH_QUERY" />
+        <button type="button" onclick="search()">Search</button>
+      </div>
+      
+      <div class="row">
+        <label for="API_KEY">API Key:</label>
+        <input type="text" id="API_KEY" name="API_KEY" />
+      </div>
+      
+      <div id="COMMON_PARAMS">
+        <div class="subheader">Data Params</div>
+        <div class="row">
+          <label for="DATASET">Dataset:</label>
+          <select id="DATASET" name="DATASET" >
+            <option value="LPI">LPI</option>
+            <option value="DPA">DPA</option>
+          </select>
+          
+          <label for="DATA_FORMAT">Format:</label>
+          <select id="DATA_FORMAT" name="DATA_FORMAT" >
+            <option value="JSON">JSON</option>
+            <option value="XML">XML</option>
+          </select>
+        </div>
         
-    function openWindow(html) {
-      var win = window.open();
-      win.document.write(html);
-      win.document.close();
+        <div class="row">
+          <label for="MIN_MATCH">Min Match:</label>
+          <input type="number" id="MIN_MATCH" name="MIN_MATCH" min="0" max="1"/>
+          
+          <label for="MAX_RESULTS">Max Results:</label>
+          <input type="number" id="MAX_RESULTS" name="MAX_RESULTS" min="1" max="100"/>
+        </div>
+        
+        <div class="subheader">Filter Params</div>
+        <div class="row">
+          <label for="CLASS_CD">Classification Code:</label>
+          <input type="text" id="CLASS_CD" name="CLASS_CD" />
+        </div>
+        
+        <div class="row">
+          <label for="LOG_STAT_CD">Logical Status Code:</label>
+          <input type="text" id="LOG_STAT_CD" name="LOG_STAT_CD" />
+        </div>
+        
+        <div class="row">
+          <label for="COUNTRY_CD">Country Code:</label>
+          <input type="text" id="COUNTRY_CD" name="COUNTRY_CD" />
+        </div>
+        
+        <div class="row">
+          <label for="LOC_CUSTODIAN_CD">Local Custodian Code:</label>
+          <input type="text" id="LOC_CUSTODIAN_CD" name="LOC_CUSTODIAN_CD" />
+        </div>
+      </div>
+      
+      <span class="note">
+        More info on the values can be found at:
+        <ul>
+          <li><a href="https://osdatahub.os.uk/docs/places/technicalSpecification" target="_blank">OS Places API: Technical specification</a></li>
+          <li><a href="https://www.ordnancesurvey.co.uk/documents/product-support/tech-spec/addressbase-premium-technical-specification.pdf" target="_blank">AddressBase Premium: Technical specification</a></li>
+        </ul>
+      </span>
+      
+    </div>
+    
+    <div class="right-pane">
+      <div id="RESULT_WRAPPER" class="hidden2">
+        <div class="subheader">Search Results</div>
+        <div>
+          <textarea id="QUERY_FULL_URL" name="QUERY_FULL_URL" 
+                    readonly="true" disabled="true" 
+                    wrap="hard" rows="3">
+          </textarea>
+        <div>
+        
+        <iframe id="IFRAME_SEARCH_RESULT" src="" title="Search Result"></iframe>
+      </div>
+    </div>
+  
+  </div>
+</body>
+
+<script type="text/javascript">
+  const OS_PLACES_URL = "https://api.os.uk/search/places/v1/find";
+  
+  const FILTER_CLASSIFICATION_CODE = "CLASSIFICATION_CODE";
+  const FILTER_LOGICAL_STATUS_CODE = "LOGICAL_STATUS_CODE";
+  const FILTER_COUNTRY_CODE = "COUNTRY_CODE";
+  const FILTER_LOCAL_CUSTODIAN_CODE = "LOCAL_CUSTODIAN_CODE";
+  
+  function get(selector) {
+    return document.querySelector(selector);
+  }
+  
+  function getValue(selector) {
+    let item = get(selector);
+    if (item) {
+      return item.value.trim();
+    }
+    return null;
+  }
+
+  function search() {
+    if (!isValid()) {
+      return;
     }
     
-    function convertInput() {      
-      var soapInput = document.getElementById("SOAP_INPUT").value;      
-      
-      var findStart = "<ser:azeusCareDetails><![CDATA[";
-      var findEnd = "]]></ser:azeusCareDetails>";
-      
-      var start = soapInput.indexOf(findStart);
-      var end = soapInput.indexOf(findEnd);
-      
-      if (start < 0 || end < 0) {
-        alert("Cannot parse SOAP Envelop Response XML");
-        return;
+    let iframeSearchRes = get("#IFRAME_SEARCH_RESULT");
+    get("#QUERY_FULL_URL").value;
+    iframeSearchRes.src = "";
+    
+    const url = initUrl();
+    get("#QUERY_FULL_URL").value = url;
+    iframeSearchRes.src = url;
+    get("#RESULT_WRAPPER").classList.remove("hidden");
+  }
+  
+  function isValid() {
+    if (getValue("#SEARCH_QUERY") == "") {
+      alert("Search query must be specified");
+      return false;
+    }
+    if (getValue("#API_KEY") == "") {
+      alert("API Key must be specified");
+      return false;
+    }
+    return true;
+  }
+  
+  function initUrl() {
+    let params = new URLSearchParams();
+    params.append("query", getValue("#SEARCH_QUERY"));
+    params.append("key", getValue("#API_KEY"));
+    
+    appendDataParam(params, "dataset", getValue("#DATASET"));
+    appendDataParam(params, "format", getValue("#DATA_FORMAT"));
+    appendDataParam(params, "minmatch", getValue("#MIN_MATCH"));
+    appendDataParam(params, "maxresults", getValue("#MAX_RESULTS"));
+    
+    appendFilterParam(params, FILTER_CLASSIFICATION_CODE, getValue("#CLASS_CD"));
+    appendFilterParam(params, FILTER_LOGICAL_STATUS_CODE, getValue("#LOG_STAT_CD"));
+    appendFilterParam(params, FILTER_COUNTRY_CODE, getValue("#COUNTRY_CD"));
+    appendFilterParam(params, FILTER_LOCAL_CUSTODIAN_CODE, getValue("#LOC_CUSTODIAN_CD"));
+
+    let fullParams = params.toString();
+    return fullParams ? (OS_PLACES_URL + "?" + fullParams) : OS_PLACES_URL;
+  }
+  
+  function appendDataParam(paramObj, paramName, paramVal) {
+    if (paramVal == "") {
+      return;
+    }
+    paramObj.append(paramName, paramVal);
+  }
+  
+  function appendFilterParam(paramObj, paramName, paramVal) {
+    if (paramVal == "") {
+      return;
+    }
+    
+    let filterParam = "";
+    let paramValArr = paramVal.split(",");
+    for (let i=0; i<paramVal.length; i++) {
+    
+      if (typeof(paramValArr[i]) == "undefined") {
+        continue;
       }
       
-      var output = soapInput.substring(start + findStart.length, end);
-      var html = unescapeHtml(output);
-      openWindow(html);
-    }  
+      let thisVal = paramValArr[i].trim();
+      if (thisVal == "") {
+        continue;
+      }
+      
+      if (filterParam.length > 0) {
+        filterParam = filterParam + " ";
+      }
+      filterParam = filterParam + paramName + ":" + thisVal;
+    }
+    
+    if (filterParam.length > 0) {
+      paramObj.append("fq", filterParam);
+    }
+  }
 
-    function generateNhsNumber() {
-      var prefix = "";
-      var checkDigit = 0;
-      do {
-        var sum = 0;
-        prefix = (Math.floor(Math.random() * (999999999 - 100000000 + 1)) + 100000000) + "";
-        for (var i = 0; i < 9; i++) {
-          sum += prefix.charAt(i) * (10 - i);
-        }
-        checkDigit = sum % 11;  
-        checkDigit = 11 - checkDigit;
-      } while(checkDigit < 1 || checkDigit > 9);  
-      return prefix + "" + checkDigit;
-    }
+  function init() {
+    get("#DATASET").value = "LPI";
+    get("#DATA_FORMAT").value = "JSON";
+    get("#MIN_MATCH").value = "0.8";
+    get("#MAX_RESULTS").value = "100";
     
-    function updateNhsNumber() {
-      document.getElementById("NHS_NUM").value = generateNhsNumber();
-    }
-    
-    function init() {
-      setTimeout(updateNhsNumber, 250);
-    }
-    
-  </script>
-</body>
+    get("#CLASS_CD").value = "R*";
+    get("#LOG_STAT_CD").value = "1,6";
+  }
+</script>
 </html>
